@@ -1,0 +1,134 @@
+name: Build and Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch_label: x64
+          - os: windows-11-arm
+            arch_label: arm64
+          - os: macos-15-intel
+            arch_label: x86_64
+          - os: macos-latest
+            arch_label: arm64
+          - os: ubuntu-latest
+            arch_label: x86_64
+          - os: ubuntu-24.04-arm
+            arch_label: aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract App Variables from pyproject.toml
+        shell: bash
+        run: |
+          APP_NAME=$(grep -E '^name\s*=' pyproject.toml | cut -d '"' -f2)
+          COMPANY_NAME=$(grep -E '^company_name\s*=' pyproject.toml | cut -d '"' -f2)
+          APP_DESC=$(grep -E '^description\s*=' pyproject.toml | cut -d '"' -f2)
+          APP_ID=$(grep -E '^app_id\s*=' pyproject.toml | cut -d '"' -f2)
+
+          APP_VERSION=${GITHUB_REF_NAME#v}
+
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "COMPANY_NAME=$COMPANY_NAME" >> $GITHUB_ENV
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "APP_DESC=$APP_DESC" >> $GITHUB_ENV
+          echo "APP_ID=$APP_ID" >> $GITHUB_ENV
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --python 3.12
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          uv run python -m nuitka --assume-yes-for-downloads --standalone --onefile --include-data-dir=src/ui=ui --output-dir=dist \
+            --windows-disable-console \
+            --windows-product-name="${{ env.APP_NAME }}" \
+            --windows-product-version="${{ env.APP_VERSION }}" \
+            --windows-company-name="${{ env.COMPANY_NAME }}" \
+            --windows-file-description="${{ env.APP_DESC }}" \
+            --windows-icon-from-ico="src/assets/icon.ico" \
+            --output-filename="${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-${{ matrix.arch_label }}.exe" src/main.py
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: |
+          uv run python -m nuitka --standalone --include-data-dir=src/ui=ui --output-dir=dist \
+            --macos-create-app-bundle \
+            --macos-app-name="${{ env.APP_NAME }}" \
+            --macos-app-version="${{ env.APP_VERSION }}" \
+            --macos-app-icon="src/assets/icon.icns" \
+            --output-filename="${{ env.APP_NAME }}" src/main.py
+
+          if [ -d "dist/main.app" ]; then mv "dist/main.app" "dist/${{ env.APP_NAME }}.app"; fi
+          hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder "dist/${{ env.APP_NAME }}.app" -ov -format UDZO "dist/${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-${{ matrix.arch_label }}.dmg"
+
+# ================== LINUX ==================
+      - name: Build Linux & Flatpak
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update && sudo apt-get install flatpak flatpak-builder ccache -y
+
+          uv run python -m nuitka --assume-yes-for-downloads --standalone --onefile --include-data-dir=src/ui=ui --output-dir=dist \
+            --output-filename="${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-${{ matrix.arch_label }}.bin" src/main.py
+
+          CURRENT_BIN="${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-${{ matrix.arch_label }}.bin"
+
+          sed -i "s/{{FLATPAK_ID}}/${{ env.APP_ID }}/g" flatpak-manifest.yml
+          sed -i "s/{{APP_BIN}}/$CURRENT_BIN/g" flatpak-manifest.yml
+          sed -i "s/{{APP_NAME}}/${{ env.APP_NAME }}/g" flatpak-manifest.yml # Nova linha
+
+          sed -i "s/{{APP_NAME}}/${{ env.APP_NAME }}/g" src/assets/app.desktop
+          sed -i "s/{{APP_BIN}}/$CURRENT_BIN/g" src/assets/app.desktop
+          sed -i "s/{{FLATPAK_ID}}/${{ env.APP_ID }}/g" src/assets/app.desktop
+
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --user build-dir flatpak-manifest.yml --force-clean --install-deps-from=flathub
+          flatpak build-export repo build-dir
+          flatpak build-bundle repo "dist/${{ env.APP_NAME }}-v${{ env.APP_VERSION }}-${{ matrix.arch_label }}.flatpak" ${{ env.APP_ID }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.os }}-${{ matrix.arch_label }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.flatpak
+            dist/*.bin
+
+  publish_release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: all-artifacts/*
+          generate_release_notes: true

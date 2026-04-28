@@ -1,0 +1,86 @@
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+MANIFEST
+
+# Nuitka
+*.build/
+*.dist/
+*.onefile-build/
+.slint-bin/
+
+# Slint
+*.slint.cache
+
+# OS
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+
+# Editors
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim / Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.emacs.desktop
+
+# CI / GitHub Actions
+.github/workflows/*.log
+
+# Flatpak
+.flatpak-builder/
+build-dir/
+repo/
+
+# Misc
+*.log
+*.tmp
+*.bak
+*.orig
+.env
+.env.*
+!.env.example

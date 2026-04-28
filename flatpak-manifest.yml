@@ -1,0 +1,20 @@
+app-id: {{FLATPAK_ID}}
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: {{APP_BIN}}
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+modules:
+  - name: {{APP_NAME}}
+    buildsystem: simple
+    build-commands:
+      - install -D dist/{{APP_BIN}} /app/bin/{{APP_BIN}}
+      - install -D src/assets/icon.png /app/share/icons/hicolor/256x256/apps/{{FLATPAK_ID}}.png
+      - install -D src/assets/app.desktop /app/share/applications/{{FLATPAK_ID}}.desktop
+    sources:
+      - type: dir
+        path: .

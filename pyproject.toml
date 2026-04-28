@@ -1,0 +1,18 @@
+[project]
+name = "MySlintApp"
+version = "1.0.0"
+description = "A modern GUI application built with Slint and Python."
+requires-python = ">=3.12"
+dependencies = [
+    "slint==1.16.1b1"
+]
+
+[tool.app-metadata]
+company_name = "Your Company"
+app_id = "com.yourcompany.myslintapp"
+
+[dependency-groups]
+dev = [
+    "nuitka==4.0.8",
+    "zstandard==0.25.0"
+]

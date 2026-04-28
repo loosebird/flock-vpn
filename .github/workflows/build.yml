@@ -1,0 +1,54 @@
+name: Multi-Platform Build Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test_build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch_label: x64
+          - os: windows-11-arm
+            arch_label: arm64
+          - os: macos-15-intel
+            arch_label: x86_64
+          - os: macos-latest
+            arch_label: arm64
+          - os: ubuntu-latest
+            arch_label: x86_64
+          - os: ubuntu-24.04-arm
+            arch_label: aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract Variables from pyproject.toml
+        shell: bash
+        run: |
+          APP_NAME=$(grep -E '^name\s*=' pyproject.toml | cut -d '"' -f2)
+          APP_VERSION=$(grep -E '^version\s*=' pyproject.toml | cut -d '"' -f2)
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --python 3.12
+
+      - name: Build Test
+        run: |
+          uv run python -m nuitka --assume-yes-for-downloads --standalone --onefile --include-data-dir=src/ui=ui --output-dir=build --output-filename="test-${{ matrix.arch_label }}" src/main.py
+        shell: bash

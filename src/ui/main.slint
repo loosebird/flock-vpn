@@ -1,0 +1,38 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    title: "Slint Multiplatform Template";
+    width: 400px;
+    height: 300px;
+    background: @linear-gradient(180deg, #f0f0f0 0%, #e0e0e0 100%);
+
+    in-out property <int> counter: 0;
+    callback process_click();
+
+    VerticalBox {
+        alignment: center;
+        spacing: 20px;
+        padding: 40px;
+
+        Text {
+            text: "Counter: \{root.counter}";
+            font-size: 32px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            color: #333;
+        }
+
+        Button {
+            text: "Increment";
+            primary: true;
+            clicked => { root.process_click(); }
+        }
+
+        Text {
+            text: "Natively compiled with Nuitka";
+            font-size: 12px;
+            color: #666;
+            horizontal-alignment: center;
+        }
+    }
+}
