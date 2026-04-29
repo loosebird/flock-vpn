@@ -13,8 +13,8 @@ modules:
     buildsystem: simple
     build-commands:
       - install -D dist/{{APP_BIN}} /app/bin/{{APP_BIN}}
-      - install -D src/assets/icon.png /app/share/icons/hicolor/256x256/apps/{{FLATPAK_ID}}.png
-      - install -D src/assets/app.desktop /app/share/applications/{{FLATPAK_ID}}.desktop
+      - install -D src/assets/icons-app/icon.png /app/share/icons/hicolor/256x256/apps/{{FLATPAK_ID}}.png
+      - install -D src/assets/icons-app/app.desktop /app/share/applications/{{FLATPAK_ID}}.desktop
     sources:
       - type: dir
         path: .

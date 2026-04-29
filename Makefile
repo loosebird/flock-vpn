@@ -5,9 +5,9 @@ COMPANY_NAME := $(shell grep -E '^company_name\s*=' pyproject.toml | cut -d '"' 
 APP_ID := $(shell grep -E '^app_id\s*=' pyproject.toml | cut -d '"' -f2)
 
 MAIN_SCRIPT = src/main.py
-ICON_WIN = src/assets/icon.ico
-ICON_MAC = src/assets/icon.icns
-ICON_LINUX = src/assets/icon.png
+ICON_WIN = src/assets/icons-app/icon.ico
+ICON_MAC = src/assets/icons-app/icon.icns
+ICON_LINUX = src/assets/icons-app/icon.png
 
 ifeq ($(OS),Windows_NT)
     DETECTED_OS := Windows
@@ -74,7 +74,7 @@ else
     POST_BUILD_CMD = @echo "Windows build complete: $(TARGET_FILE)"
 endif
 
-.PHONY: info install dev build clean
+.PHONY: info install dev build clean preview ui
 
 info:
 	@echo "Build Info"
@@ -91,6 +91,9 @@ install:
 
 dev:
 	uv run $(MAIN_SCRIPT)
+	
+ui:
+	slint-viewer --auto-reload src/ui/main.slint
 
 build: info
 	uv run python -m nuitka $(NUITKA_FLAGS) $(MAIN_SCRIPT)

@@ -3,8 +3,8 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
-name = "myslintapp"
-version = "1.0.0"
+name = "flockvpn"
+version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "slint" },

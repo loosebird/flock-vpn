@@ -1,6 +1,6 @@
 [project]
-name = "MySlintApp"
-version = "1.0.0"
+name = "FlockVPN"
+version = "0.0.1"
 description = "A modern GUI application built with Slint and Python."
 requires-python = ">=3.12"
 dependencies = [
@@ -8,8 +8,8 @@ dependencies = [
 ]
 
 [tool.app-metadata]
-company_name = "Your Company"
-app_id = "com.yourcompany.myslintapp"
+company_name = "Loosebird"
+app_id = "com.loosebird.flockvpn"
 
 [dependency-groups]
 dev = [

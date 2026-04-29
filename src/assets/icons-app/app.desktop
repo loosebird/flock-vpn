@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name={{APP_NAME}}
+Exec={{APP_BIN}}
+Icon={{FLATPAK_ID}}
+Type=Application
+Categories=Utility;
