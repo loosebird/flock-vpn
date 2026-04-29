@@ -1,18 +1,26 @@
 import slint
 import os
-import sys
+from core.system_info import get_os, get_arch
+
+# Forces the FemtoVG renderer.
+os.environ["SLINT_BACKEND"] = "renderer-femtovg-wgpu"
+
+os.environ["SLINT_STYLE"] = "native"
 
 def get_resource_path(relative_path):
-    """ Ensures the path works both in the terminal and in the compiled binary """
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), relative_path)
+    """ Ensures the path works both in the terminal and in the compiled Nuitka binary """
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
 
 def main():
     # Locate the .slint file inside the ui/ folder.
     ui_path = get_resource_path(os.path.join("ui", "main.slint"))
     ui = slint.load_file(ui_path)
     app = ui.MainWindow()
+
+    os_system = get_os()
+    arch = get_arch()
+    app.system_info = f"You are on {os_system} with {arch} architecture."
 
     def increment():
         app.counter += 1
